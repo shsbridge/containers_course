@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Say Hello</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <img src="https://tomweitempbucket.s3.ap-southeast-1.amazonaws.com/crown.jpg">
+    <br>
+        {% for message in get_flashed_messages() %}
+          {% if message == 'message1' %}
+             <p>Logic will get you from A to B. Imagination will take you everywhere.</p>
+          {% endif %}        
+          {% if message == 'message2' %}
+             <p>There are 10 kinds of people. Those who know binary and those who don't.</p>
+          {% endif %}        
+          {% if message == 'message3' %}
+             <p>There are two ways of constructing a software design. One way is to make it so simple that there are obviously no deficiencies and the other is to make it so complicated that there are no obvious deficiencies.</p>
+          {% endif %}        
+          {% if message == 'message4' %}
+             <p>It's not that I'm so smart, it's just that I stay with problems longer.</p>
+          {% endif %}        
+          {% if message == 'message5' %}
+             <p>It is pitch dark. You are likely to be eaten by a grue.</p>
+          {% endif %}        
+        {% endfor %}
+    <br>
+    <p>Repository<a href="https://github.com/shsbridge/containers_course.git">https://github.com/shsbridge/containers_course.git</a></p>
+</body>
+</html>
