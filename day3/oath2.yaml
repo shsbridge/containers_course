@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth-secret
+  labels:
+    app: codeserver
+    name: oauth-secret
+  namespace: cs
+type: Opeque
+data:
+  OAUTH2_PROXY_CLIENT_ID: OTg1NjNjZTlhNGI2OGE4N2E3OGY=
+  OAUTH2_PROXY_CLIENT_SECRET: NzMyYjlhNmVmZTM3ZjUzZDE2OTA1MzFjNGJhZDNjODBhOGQwODE0Ng==
+  OAUTH2_PROXY_COOKIE_SECRET: NEE2MTRFNjQ1MjY3NTU2QjU4NkUzMjcyMzU3NTM4Nzg=

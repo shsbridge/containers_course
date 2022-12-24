@@ -1,0 +1,128 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minions
+  labels:
+    name: minions
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-hsvc
+  namespace: minions
+spec:
+  clusterIP: None
+  selector:
+    app: minio-db
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      name: svc-port
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+      name: con-port
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio-sts
+  labels:
+    name: minio-sts
+  namespace: minions
+spec:
+  serviceName: minio-hsvc
+  replicas: 4
+  selector:
+    matchLabels:
+      app: minio-db
+  volumeClaimTemplates:
+  - metadata:
+      name: mino-pvc
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: do-block-storage
+      resources:
+        requests:
+          storage: 1Gi
+  template:
+    metadata:
+      name: minio-db
+      labels:
+        app: minio-db
+    spec:
+      initContainers:
+      - name: minio-init-c
+        image: busybox
+        command:
+        - /bin/sh
+        - -c
+        - "chown 1001 /data"
+        volumeMounts:
+        - mountPath: "/data"
+          name: mino-pvc
+      containers:
+      - name: minio-db
+        image: bitnami/minio:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - minio
+        - server
+        - --address=:9000
+        - --console-address=:9090
+        - http://minio-sts{0...3}.minio-hsvc.minio.svc.cluster.local/data
+        env:
+        - name: MINIO_ROOT_USER
+          value: root
+        - name: MINIO_ROOT_PASSWORD
+          value: root123456
+        ports:
+        - containerPort: 9000
+          protocol: TCP
+        - containerPort: 9090
+          protocol: TCP        
+        volumeMounts:
+        - mountPath: "/data"
+          name: mino-pvc
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: 9000
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio-ing
+  labels:
+    name: minio-ing
+    app: minio-db
+  namespace: minions
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: data-146.190.195.82.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio-hsvc
+            port:
+              name: svc-port
+  - host: console-146.190.195.82.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minio-hsvc
+            port:
+              name: con-port

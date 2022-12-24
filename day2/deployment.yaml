@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dov-bear
+  labels:
+    name: dov-bear
+  namespace: myns
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: mypod
+  template:
+    metadata:
+      name: mypod
+      labels:
+        name: mypod
+    spec:
+      containers:
+      - name: dov-bear
+        image: chukmunnlee/dov-bear-golang:0.1
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PORT
+          value: "3000"
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dov-bear-sc
+  labels:
+    name: dov-bear-sc
+spec:
+  type: ClusterIP
+  selector:
+    name: mypod
+  ports:
+  - port: 3000
+    targetPort: 3000

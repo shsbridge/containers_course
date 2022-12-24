@@ -1,0 +1,56 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cs-dp
+  labels:
+    name: cs-dp
+  namespace: cs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codeserver
+  template:
+    metadata:
+      name: codeserver
+      labels:
+        app: codeserver
+      annotations:
+        nginx.ingress.kubernetes.io/auth-url: "https://$host/oauth2/auth"
+        nginx.ingress.kubernetes.io/auth-signin: "https://$host/oauth2/start?rd=$escaped_request_uri"
+    spec:
+      volumes:
+      - name: cs-vol
+        persistentVolumeClaim:
+          claimName: cs-pvc
+      containers:
+      - name: codeserver
+        image: linuxserver/code-server:4.9.1
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef: 
+            name: cs-cm
+        ports:
+        - containerPort: 8443
+          protocol: TCP
+        volumeMounts:
+        - mountPath: "/config/workspace"
+          name: cs-vol
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cs-svc
+  namespace: cs
+spec:
+  type: ClusterIP
+  selector:
+    app: codeserver
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+
+        

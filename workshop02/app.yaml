@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bggapp-svc
+  namespace: bggns
+spec:
+  type: NodePort
+  selector:
+    app: bgg-backend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30800
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bgg-backend-dp
+  labels:
+    app: bgg-backend
+  namespace: bggns
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bgg-backend
+  template:
+    metadata:
+      labels:
+        app: bgg-backend
+    spec:
+      containers:
+      - name: bgg-backend
+        image: stackupiss/bgg-backend:v1
+        envFrom:
+        - configMapRef:
+            name: bgg-config
+        env:
+        - name: BGG_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bgg-secret
+              key: BGG_DB_PASSWORD
+        ports:
+        - containerPort: 3000
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
