@@ -1,0 +1,56 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cs-dp
+  labels:
+    name: cs-dp
+  namespace: cs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: cs-po
+      app: codeserver
+  template:
+    metadata:
+      name: cs-po
+      labels:
+        name: cs-po
+        app: codeserver
+    spec:
+      volumes:
+      - name: cs-vol
+        persistentVolumeClaim:
+          claimName: cs-pvc
+      containers:
+      - name: codeserver
+        image: linuxserver/code-server:4.9.1
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef: 
+            name: cs-cm
+        ports:
+        - containerPort: 8443
+          protocol: TCP
+        volumeMounts:
+        - mountPath: "/config/workspace"
+          name: cs-vol
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cs-svc
+  namespace: cs
+spec:
+  type: ClusterIP
+  selector:
+    name: cs-po
+    app: codeserver
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+
+        
